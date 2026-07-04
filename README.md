@@ -176,6 +176,14 @@ server.mjs                 zero-dependency static server for npm start
 
 ## Assumptions
 
+- **India-first by choice, not India-locked by design.** Deep, fact-checked
+  coverage of one country beats shallow coverage of many: the storytelling
+  layer is only as honest as the facts that ground it, and the engine's
+  smartest behaviours (monsoon honesty, lunar-calendar festival drift,
+  ₹-tier budgets, temple/gurdwara etiquette) come from domain depth.
+  Nothing in `js/engine/` knows it is in India — going global is adding
+  catalog files that conform to the schema in `js/data/catalog.js` and
+  pass the same sanity tests.
 - **The catalog is a curated sample, not a gazetteer**: 12 destinations
   across all six regions of India, ~115 attractions, 55+ experiences and
   35+ festivals — enough to make the decision logic real. Popularity,
