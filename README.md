@@ -33,6 +33,8 @@ fully argued trip plan:
 
 ## Quick start
 
+**Live demo:** https://tombro27.github.io/safarnama/
+
 ```bash
 npm start        # zero dependencies — serves at http://localhost:8080
 npm test         # unit + catalog-sanity tests via Node's built-in runner
