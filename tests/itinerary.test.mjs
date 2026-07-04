@@ -34,8 +34,8 @@ test('the signature sight survives even a crowd-averse context', () => {
     const anchor = planned.find((i) => i.anchor);
     assert.ok(anchor, `${dest.name} keeps its signature sight`);
     assert.ok(
-      anchor.why.some((w) => w.includes('before the crowds')),
-      'crowd-averse anchors are scheduled to beat the crowds'
+      anchor.why.some((w) => /crush|crowds/.test(w)),
+      'crowd-averse anchors carry a plan to dodge the crowds'
     );
   }
 });
@@ -91,6 +91,18 @@ test('evenings without festivals get authentic experiences, none repeated', () =
   assert.ok(evenings.every((e) => e.type === 'experience'));
   const ids = evenings.map((e) => e.entry.experience.id);
   assert.equal(new Set(ids).size, ids.length, 'no experience repeats');
+});
+
+test('the estimate never bills an evening that is not on the plan', () => {
+  // A long trip exhausts the catalog, so fewer days get built than asked.
+  // Every experience charged must correspond to an evening actually shown.
+  for (const dest of DESTINATIONS) {
+    const plan = buildItinerary(dest, { days: 12, pace: 'relaxed', budget: 'shoestring' });
+    const shown = plan.days
+      .filter((d) => d.evening?.type === 'experience')
+      .reduce((sum, d) => sum + d.evening.entry.experience.cost, 0);
+    assert.equal(plan.estimate.experiences, shown, `${dest.name}: billed = shown`);
+  }
 });
 
 test('the estimate adds up and scales with the budget tier', () => {

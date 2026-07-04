@@ -35,7 +35,7 @@ export default {
       kind: 'temple',
       zone: 'sacred-centre',
       interests: ['spiritual', 'architecture', 'history'],
-      popularity: 0.7,
+      popularity: 0.8,
       culturalValue: 0.9,
       hours: 1.5,
       entryCost: 0,

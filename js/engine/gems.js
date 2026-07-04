@@ -9,7 +9,7 @@
  * itinerary is what enforces constraints.
  */
 
-import { INTERESTS } from './context.js';
+import { interestLabels } from './context.js';
 import { matchedInterests } from './score.js';
 
 export const GEM_MAX_POPULARITY = 0.4;
@@ -34,7 +34,7 @@ function gemReasons(attraction, matched, ctx) {
     `Cultural value ${Math.round(attraction.culturalValue * 10)}/10 with a fraction of the usual footfall`
   );
   if (matched.length > 0) {
-    reasons.push(`Speaks to your interest in ${matched.map((k) => INTERESTS[k].toLowerCase()).join(' and ')}`);
+    reasons.push(`Speaks to your interest in ${interestLabels(matched)}`);
   }
   if (ctx.mobility && !attraction.mobilityFriendly) {
     reasons.push('Heads-up: involves steps or uneven ground');

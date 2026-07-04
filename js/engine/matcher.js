@@ -20,7 +20,7 @@ import { festivalsIn, monthName } from './events.js';
 /** How many ranked destinations the UI presents (top pick + alternatives). */
 export const SHORTLIST_SIZE = 3;
 
-export const SEASONS = ['peak', 'shoulder', 'off'];
+/** Season desirability, scored 1 (peak) down to off — see seasonFor(). */
 const SEASON_SCORE = { peak: 1, shoulder: 0.6, off: 0.25 };
 
 /**
@@ -94,13 +94,19 @@ export function formatMonths(months) {
     .join(', ');
 }
 
-/** Relative affordability of a destination within its tier, across the pool. */
-function costScore(destination, pool, tier) {
+/**
+ * Cheapest and dearest per-day cost in the pool for a tier — computed once
+ * per ranking so cost scoring stays O(n), not O(n²).
+ */
+function costBounds(pool, tier) {
   const costs = pool.map((d) => d.costPerDay[tier]);
-  const min = Math.min(...costs);
-  const max = Math.max(...costs);
-  if (max === min) return 1;
-  return 1 - (destination.costPerDay[tier] - min) / (max - min);
+  return { min: Math.min(...costs), max: Math.max(...costs) };
+}
+
+/** Relative affordability of a destination within its tier (1 = cheapest). */
+function costScore(cost, bounds) {
+  if (bounds.max === bounds.min) return 1;
+  return 1 - (cost - bounds.min) / (bounds.max - bounds.min);
 }
 
 function affinityReason(destination, ctx) {
@@ -161,6 +167,7 @@ export function rankDestinations(rawContext) {
   const regionRelaxed = pool.length === 0;
   if (regionRelaxed) pool = DESTINATIONS;
 
+  const bounds = costBounds(pool, ctx.budget);
   const ranked = pool
     .map((destination) => {
       const season = seasonFor(destination, ctx.month);
@@ -170,7 +177,7 @@ export function rankDestinations(rawContext) {
         weights.season * SEASON_SCORE[season] +
         weights.crowd * crowdFit(destination.popularity, ctx.crowd) +
         weights.festival * (festivals.length > 0 ? 1 : 0) +
-        weights.cost * costScore(destination, pool, ctx.budget);
+        weights.cost * costScore(destination.costPerDay[ctx.budget], bounds);
       return {
         destination,
         score,

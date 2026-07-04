@@ -10,7 +10,7 @@
  * craft or community.
  */
 
-import { INTERESTS } from './context.js';
+import { interestLabels } from './context.js';
 import { matchedInterests } from './score.js';
 
 /** Per-person spend that stops feeling routine for each budget tier (₹). */
@@ -20,7 +20,7 @@ function experienceReasons(entry, ctx) {
   const reasons = [];
   if (entry.matched.length > 0) {
     reasons.push(
-      `Hands-on with ${entry.matched.map((k) => INTERESTS[k].toLowerCase()).join(' and ')}`
+      `Hands-on with ${interestLabels(entry.matched)}`
     );
   }
   reasons.push(

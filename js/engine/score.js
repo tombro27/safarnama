@@ -52,10 +52,13 @@ export function matchedInterests(interests, userInterests) {
 }
 
 /**
- * Interest fit of a single place: 1 when the place is entirely about
- * something the user loves, tapering as its focus spreads across tags the
- * user didn't pick; a small floor keeps unmatched places rankable rather
- * than invisible (a great monument is still worth a slot on a quiet day).
+ * Interest fit of a single place, on a 0.5..1 band once it matches at all:
+ * it climbs with the share of matchable slots the place actually hits —
+ * `hits / min(placeTags, userInterests)` — so a place covering every one of
+ * a focused traveller's interests reaches 1, while a place that lands only
+ * one of several scores lower. A small 0.2 floor keeps non-matching places
+ * rankable rather than invisible (a great monument is still worth a slot on
+ * a quiet day).
  *
  * @param {string[]} interests the place's interest tags (never empty)
  * @param {string[]} userInterests

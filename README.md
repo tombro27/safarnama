@@ -11,7 +11,7 @@ fully argued trip plan:
    matches are presented with the *reasons* for every pick shown.
 2. **A day-by-day cultural itinerary** — attractions clustered by zone so a
    day flows through one part of town, paced to your style, with the
-   signature sight kept even for crowd-haters (scheduled at opening time
+   signature sight kept even for crowd-haters (timed to dodge the crush
    instead of deleted from your trip).
 3. **Hidden gems** — places with high cultural reward and little footfall,
    surfaced by explicit thresholds and ranked for your interests.
@@ -76,9 +76,11 @@ structured form ────────────► normalizeContext()      
 - **Season honesty.** Months are classified peak / shoulder / off against
   each destination's climate-honest best months (cyclically — December's
   neighbour is January). Off season is *stated in the reasons*, never hidden.
-- **The anchor rule.** Every itinerary keeps the destination's signature
-  sight. A crowd-averse context doesn't delete the Meenakshi temple — it
-  schedules it first, at opening time, and says why.
+- **The anchor rule.** When a destination has a clear signature sight (a
+  standout on all-India footfall), the itinerary always keeps it — a
+  crowd-averse context doesn't delete the Meenakshi temple, it times the
+  visit to dodge the crush (opening time, or the sight's own best hour) and
+  says why. Places with no dominant sight simply lead with their best.
 - **Hidden gems are a formula, not vibes**: popularity ≤ 0.4 on an all-India
   scale AND cultural value ≥ 0.7, ranked by cultural reward per unit of
   crowd, gems serving *your* interests first.
@@ -87,14 +89,16 @@ structured form ────────────► normalizeContext()      
   day closes when its slots (2/3/4 by pace) or its humane hour-budget fill
   up, and a zone once left is never returned to.
 - **Evenings are cultural programming.** Festivals falling in your month
-  claim the first evenings; authentic experiences fill the rest — best
-  interest matches first, splurges last.
+  claim the first evenings; authentic experiences fill the rest — in-budget
+  ones in interest-match order first, above-budget splurges only once
+  nothing cheaper is left to schedule.
 - **Mobility is a hard constraint with a soft voice**: step-free trips
   exclude inaccessible places from the *plan* and say which ones were
   skipped; the *discovery* sections still show them, flagged.
-- **Deterministic by design.** Every ranking breaks ties on cost then name;
-  the same inputs always produce the same trip — inspectable, testable,
-  impossible to fake.
+- **Deterministic by design.** Every ranking resolves ties with a stable
+  chain ending in the place's name (destinations fall back to cost, gems and
+  experiences to their own reward and price), so the same inputs always
+  produce the same trip — inspectable, testable, impossible to fake.
 
 ### The GenAI layers
 

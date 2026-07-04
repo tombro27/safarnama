@@ -15,7 +15,7 @@
  * Deterministic throughout: same inputs, same trip.
  */
 
-import { normalizeContext, INTERESTS } from './context.js';
+import { normalizeContext, interestLabels } from './context.js';
 import { crowdFit, interestFit, matchedInterests } from './score.js';
 import { isHiddenGem } from './gems.js';
 import { festivalsIn } from './events.js';
@@ -31,12 +31,26 @@ const ANCHOR_MIN_POPULARITY = 0.75;
 const ATTRACTION_WEIGHTS = { interest: 0.45, cultural: 0.30, crowd: 0.25 };
 const BEST_TIME_ORDER = { morning: 0, any: 1, afternoon: 2, evening: 3 };
 
+// Attraction scores are read inside sort comparators (many times per
+// attraction); memoize per normalized context so each is computed once. The
+// context object is fresh per buildItinerary() call, so the cache clears
+// with it — no cross-call staleness.
+const scoreCache = new WeakMap();
+
 function scoreAttraction(attraction, ctx) {
-  return (
+  let perCtx = scoreCache.get(ctx);
+  if (!perCtx) {
+    perCtx = new Map();
+    scoreCache.set(ctx, perCtx);
+  }
+  const cached = perCtx.get(attraction);
+  if (cached !== undefined) return cached;
+  const score =
     ATTRACTION_WEIGHTS.interest * interestFit(attraction.interests, ctx.interests) +
     ATTRACTION_WEIGHTS.cultural * attraction.culturalValue +
-    ATTRACTION_WEIGHTS.crowd * crowdFit(attraction.popularity, ctx.crowd)
-  );
+    ATTRACTION_WEIGHTS.crowd * crowdFit(attraction.popularity, ctx.crowd);
+  perCtx.set(attraction, score);
+  return score;
 }
 
 /** 'old-city' → 'Old City' for day titles. */
@@ -140,9 +154,15 @@ function clusterIntoDays(chosen, anchor, ctx) {
 function whyThisAttraction(attraction, anchor, ctx) {
   const why = [];
   if (attraction === anchor) {
+    // Crowd-averse travellers keep the signature sight, timed to dodge the
+    // crush — at opening time, unless the place is genuinely best later.
+    const beatCrowds =
+      attraction.bestTime === 'morning' || attraction.bestTime === 'any'
+        ? 'go right at opening, before the crowds'
+        : `go in the ${attraction.bestTime}, its best hour, and skirt the day-trip crush`;
     why.push(
       ctx.crowd === 'avoid'
-        ? 'The signature sight — placed first, at opening time, so you meet it before the crowds do'
+        ? `The signature sight — kept in your trip, with a plan to ${beatCrowds}`
         : 'The signature sight of this destination'
     );
   }
@@ -151,7 +171,7 @@ function whyThisAttraction(attraction, anchor, ctx) {
   }
   const matched = matchedInterests(attraction.interests, ctx.interests);
   if (matched.length > 0) {
-    why.push(`For your love of ${matched.map((k) => INTERESTS[k].toLowerCase()).join(' and ')}`);
+    why.push(`For your love of ${interestLabels(matched)}`);
   }
   if (attraction.bestTime !== 'any') {
     why.push(`At its best in the ${attraction.bestTime}`);
@@ -160,17 +180,20 @@ function whyThisAttraction(attraction, anchor, ctx) {
 }
 
 /**
- * Plan evenings: festivals claim the first evenings (they're the reason
- * to be here THIS month), then experiences fill the rest — best interest
- * matches first, splurges only when nothing within budget remains.
+ * Plan evenings: festivals claim the first evenings (they're the reason to
+ * be here THIS month), then experiences fill the rest — in-budget ones in
+ * interest-match order first, and above-budget "splurge" experiences only
+ * once nothing within budget is left to schedule. Splurges are never hidden
+ * (the discovery list still shows them, flagged); we just don't quietly
+ * bill one into your itinerary while a cheaper option was available.
  */
 function planEvenings(destination, ctx) {
-  const evenings = [];
-  for (const festival of festivalsIn(destination, ctx.month)) {
-    evenings.push({ type: 'festival', festival });
-  }
+  const evenings = festivalsIn(destination, ctx.month).map((festival) => ({ type: 'festival', festival }));
+
   const { matches } = matchExperiences(destination, ctx);
-  for (const entry of matches) {
+  const withinBudget = matches.filter((entry) => !entry.splurge);
+  const splurges = matches.filter((entry) => entry.splurge);
+  for (const entry of [...withinBudget, ...splurges]) {
     evenings.push({ type: 'experience', entry });
   }
   return evenings.slice(0, ctx.days);
@@ -224,7 +247,10 @@ export function buildItinerary(destination, rawContext) {
   const ctx = normalizeContext(rawContext);
   const selection = selectAttractions(destination, ctx);
   const { days: dayPlans, spillover } = clusterIntoDays(selection.chosen, selection.anchor, ctx);
-  const evenings = planEvenings(destination, ctx);
+  // Only program (and cost) evenings for days that actually get built — a
+  // trip can end up shorter than requested when the catalog runs out, and a
+  // billed-but-unshown evening would make the estimate lie.
+  const evenings = planEvenings(destination, ctx).slice(0, dayPlans.length);
 
   const days = dayPlans.map((day, i) => ({
     index: i + 1,

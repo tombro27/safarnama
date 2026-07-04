@@ -42,6 +42,9 @@ body {
   color: var(--ink);
   font-family: Georgia, 'Times New Roman', serif;
   line-height: 1.55;
+  /* Match native controls (the API-key field, date/number spinners,
+     scrollbars) to the active theme instead of forcing UA light. */
+  color-scheme: light dark;
 }
 
 h1, h2, h3, h4, h5, legend, button, .badge, .muted, label, select, input, textarea, dl {
@@ -159,9 +162,14 @@ button:disabled { opacity: 0.6; cursor: wait; }
   padding: 1rem 1.15rem;
   margin: 0 0 1rem;
 }
+.card:hover { border-color: var(--muted); }
 .match-card.top-pick { border: 2px solid var(--accent); }
 .match-card h3 { margin: 0.25rem 0 0; }
 .tagline-small { font-style: italic; }
+
+/* Above-budget experiences are flagged, not hidden: a dashed edge marks
+   the splurge card so the cue survives even without the badge's colour. */
+.experience-card.splurge { border-style: dashed; border-color: var(--festival); }
 
 .badge {
   display: inline-block;
@@ -232,5 +240,7 @@ button:disabled { opacity: 0.6; cursor: wait; }
   .story-block, .skip-link { display: none !important; }
   body { background: #fff; color: #000; max-width: none; }
   .card { border: 1px solid #999; break-inside: avoid; }
-  #trip { display: block !important; }
+  /* Only force the trip visible when one has actually been built —
+     otherwise `hidden` stays honoured and a blank Ctrl+P prints nothing. */
+  #trip:not([hidden]) { display: block !important; }
 }

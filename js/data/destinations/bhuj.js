@@ -296,7 +296,7 @@ export default {
     {
       id: 'rann_utsav',
       name: 'Rann Utsav',
-      months: [11, 12, 1],
+      months: [11, 12, 1, 2],
       description: 'Gujarat Tourism\'s winter festival at the White Rann near Dhordo, running roughly November to February, with a tent city, craft bazaars, folk music and camel carts out onto the salt flats, peaking on full-moon nights.',
       whyGo: 'You watch Kutchi folk singers and dancers perform against a glowing white desert, browse craft stalls where artisans sell directly, and walk the moonlit salt crust - the region\'s crafts and music gathered in one place.',
       etiquette: 'Buy crafts from artisan-run stalls rather than resellers, and don\'t drive or walk beyond marked areas of the Rann - the crust hides soft mud and the border zone is restricted.',

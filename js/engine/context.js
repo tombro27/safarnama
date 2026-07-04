@@ -21,6 +21,18 @@ export const INTERESTS = {
 };
 export const INTEREST_KEYS = Object.keys(INTERESTS);
 
+/**
+ * Human list of interest labels, lower-cased for mid-sentence use, joined
+ * with "and" — e.g. ['crafts','folk'] → "crafts & handlooms and folk life
+ * & local ways". Used wherever a reason names the interests it serves.
+ *
+ * @param {string[]} keys interest keys (assumed valid)
+ * @returns {string}
+ */
+export function interestLabels(keys) {
+  return keys.map((key) => INTERESTS[key].toLowerCase()).join(' and ');
+}
+
 export const PACES = ['relaxed', 'balanced', 'packed'];
 export const BUDGET_TIERS = ['shoestring', 'comfortable', 'premium'];
 export const CROWD_PREFS = ['avoid', 'mixed', 'buzz'];

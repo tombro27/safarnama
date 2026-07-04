@@ -21,32 +21,47 @@ const NO_KEY_HINT =
  * @returns {HTMLElement}
  */
 export function storyBlock(subject) {
-  const output = el('div', { class: 'story-output', role: 'status', 'aria-live': 'polite' });
+  // No persistent aria-live here: a page can hold a dozen-plus story blocks,
+  // and that many idle live regions is noise. The result appears right after
+  // the button in reading order, and generate() moves focus onto it, so
+  // screen-reader users still land on the new content.
+  const output = el('div', { class: 'story-output', tabindex: '-1' });
   const button = el(
     'button',
     { type: 'button', class: 'secondary story-btn', onclick: () => generate() },
     `✨ Longer story: ${subject.label}`
   );
 
+  // In-flight guard instead of button.disabled: disabling a focused button
+  // dumps keyboard focus to <body>. aria-busy signals the wait without
+  // stealing focus, and the guard blocks double-submits.
+  let busy = false;
+
   async function generate() {
+    if (busy) return;
     const apiKey = getApiKey();
     if (!apiKey) {
       output.replaceChildren(el('p', { class: 'muted small' }, NO_KEY_HINT));
       return;
     }
-    button.disabled = true;
+    busy = true;
+    button.setAttribute('aria-busy', 'true');
     output.replaceChildren(el('p', { class: 'muted small' }, 'Weaving the story from our fact-checked notes…'));
     try {
       const { title, story } = await tellStory(subject, apiKey);
+      // The generated title is decorative, not a document landmark — a styled
+      // paragraph, so it never breaks the page's heading hierarchy.
       output.replaceChildren(
-        el('h5', { class: 'story-title' }, title),
+        el('p', { class: 'story-title' }, el('strong', {}, title)),
         el('p', { class: 'story-text' }, story),
         el('p', { class: 'muted small' }, 'AI-woven strictly from the fact-checked notes in our catalog.')
       );
+      output.focus();
     } catch (err) {
       output.replaceChildren(el('p', { class: 'error small' }, `Story mode hit a snag: ${err.message}`));
     } finally {
-      button.disabled = false;
+      busy = false;
+      button.removeAttribute('aria-busy');
     }
   }
 

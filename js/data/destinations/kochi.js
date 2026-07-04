@@ -293,8 +293,8 @@ export default {
     {
       id: 'kochi_muziris_biennale',
       name: 'Kochi-Muziris Biennale',
-      months: [12, 1, 2],
-      description: 'India\'s largest contemporary art exhibition takes over Fort Kochi and Mattancherry roughly every two years, typically opening in December and running into March or April, filling heritage warehouses, halls and public spaces with Indian and international art.',
+      months: [12, 1, 2, 3],
+      description: 'India\'s largest contemporary art exhibition takes over Fort Kochi and Mattancherry roughly every two years, typically opening in December and running into March or April, filling heritage warehouses, halls and public spaces with Indian and international art. Being biennial, it is not held every winter — check whether an edition is on before planning around it.',
       whyGo: 'You walk between world-class installations set inside crumbling spice godowns, with the sea and the old town as the gallery.',
       etiquette: 'Do not touch installations, and follow each venue\'s photography rules, which vary work by work.',
     },
