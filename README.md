@@ -8,7 +8,10 @@ fully argued trip plan:
 
 1. **Destination discovery** — every destination in the catalog is scored
    for *you* (interests, season, crowds, festivals, budget) and the top
-   matches are presented with the *reasons* for every pick shown.
+   matches are presented with the *reasons* for every pick shown. Optionally,
+   a **grounded AI layer** lets Gemini reason over the catalog and rank the
+   destinations itself — fenced so it can only ever pick real, fact-checked
+   places (see The GenAI layers).
 2. **A day-by-day cultural itinerary** — attractions clustered by zone so a
    day flows through one part of town, paced to your style, with the
    signature sight kept even for crowd-haters (timed to dodge the crush
@@ -104,7 +107,7 @@ structured form ────────────► normalizeContext()      
 
 ### The GenAI layers
 
-Two real Gemini integrations (`gemini-3.5-flash`, falling back to
+Three real Gemini integrations (`gemini-3.5-flash`, falling back to
 `gemini-3.1-flash-lite`; JSON-schema-constrained; user-supplied key):
 
 1. **Free-text trip parsing** — *"two of us, 5 days in November, old forts
@@ -115,6 +118,20 @@ Two real Gemini integrations (`gemini-3.5-flash`, falling back to
    the curated `facts` of that place **and nothing else** — the prompt
    forbids invented names, dates and legends. The catalog's facts were
    themselves fact-checked, so the stories stay honest.
+3. **Grounded recommendation (✨ "let the AI reason over the catalog")** —
+   an optional retrieval-augmented layer where Gemini, not the fixed
+   scoring weights, *reasons* over the whole catalog and argues in natural
+   language for the best-fitting destinations — catching nuance a formula
+   can't. The honesty comes from a **fence** (`groundRecommendations`): the
+   model may only return catalog ids, and anything it invents is discarded
+   before display. The model supplies the *reasoning*; the catalog supplies
+   every *fact*. Each AI card also shows the rule-based engine's rank as a
+   transparency cross-check, and the deterministic ranking is always the
+   fallback. This is the direct answer to *"is the recommendation itself
+   AI?"* — it can be, without ever letting the model hallucinate a place.
+   (At 12 destinations the whole catalog fits in context, so "retrieval"
+   here is faithful compaction, `catalogDigest`, not a vector search — the
+   same grounding discipline without the machinery.)
 
 Deliberate choices, identical to how we treat all AI:
 
@@ -172,6 +189,7 @@ js/ai/                     the GenAI layer (all optional at runtime)
   client.js                schema-constrained Gemini calls, timeouts, errors
   tripParser.js            free text → structured context
   storyteller.js           grounded story generation (facts in, story out)
+  recommender.js           grounded RAG recommendation + the fact-fence
 js/ui/                     rendering, split by view (no engine logic)
   dom.js · storage.js      safe builders, guarded storage
   aiBox.js · storyMode.js  the two GenAI surfaces

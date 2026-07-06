@@ -13,13 +13,15 @@ import { buildItinerary } from './engine/itinerary.js';
 import { hiddenGems } from './engine/gems.js';
 import { festivalsIn, nextFestival } from './engine/events.js';
 import { matchExperiences } from './engine/experiences.js';
-import { wireAiBox } from './ui/aiBox.js';
-import { renderMatches } from './ui/matchesView.js';
+import { recommendDestinations } from './ai/recommender.js';
+import { wireAiBox, getApiKey } from './ui/aiBox.js';
+import { renderMatches, renderAiMatches } from './ui/matchesView.js';
 import { renderTripIntro, renderTripDays, renderTripEstimate, renderTripNotes } from './ui/tripView.js';
 import { renderGems, renderEvents, renderExperiences } from './ui/discoverView.js';
 import { readJson, writeJson } from './ui/storage.js';
 
 const CONTEXT_STORE = 'context';
+const AI_MODE_STORE = 'aiRecommend';
 
 const $ = (id) => document.getElementById(id);
 
@@ -62,16 +64,48 @@ function fillForm(ctx) {
   document.querySelector('input[name="mobility"]').checked = ctx.mobility;
 }
 
-function showMatches() {
+/** Rule-based ranking as the default and the AI's transparency cross-check. */
+function showDeterministicMatches(result) {
+  renderMatches($('match-cards'), result, showTrip);
+  announce(`Found your top destinations — ${result.ranked[0].destination.name} leads.`);
+}
+
+/** destinationId → 1-based rule-based rank, for the AI cards' cross-check. */
+function rankLookupFrom(result) {
+  return new Map(result.ranked.map((entry, i) => [entry.destination.id, i + 1]));
+}
+
+async function showMatches() {
   lastRaw = readForm();
   writeJson(CONTEXT_STORE, lastRaw);
 
+  // The rule-based ranking always runs: it's the default view, the AI's
+  // honesty cross-check, and the fallback if the AI path can't be used.
   const result = rankDestinations(lastRaw);
-  renderMatches($('match-cards'), result, showTrip);
+  const wantAi = $('ai-recommend').checked;
+  const apiKey = wantAi ? getApiKey() : '';
 
   $('matches').hidden = false;
   $('trip').hidden = true;
-  announce(`Found your top destinations — ${result.ranked[0].destination.name} leads.`);
+
+  if (wantAi && apiKey) {
+    announce('Asking the AI to reason over the catalog…');
+    try {
+      const grounded = await recommendDestinations(lastRaw, apiKey);
+      renderAiMatches($('match-cards'), grounded, rankLookupFrom(result), showTrip);
+      announce(`AI reasoned over the catalog — ${grounded.recommendations[0].destination.name} leads.`);
+    } catch (err) {
+      // No fabricated output: show the real error, then the rule-based result.
+      showDeterministicMatches(result);
+      announce(`AI recommendation unavailable (${err.message}) — showing the rule-based ranking instead.`);
+    }
+  } else {
+    showDeterministicMatches(result);
+    if (wantAi && !apiKey) {
+      announce('Add a Gemini API key in the ✨ box above for AI recommendations — showing the rule-based ranking.');
+    }
+  }
+
   $('matches-heading').focus();
 }
 
@@ -98,6 +132,8 @@ function showTrip(entry) {
 }
 
 function restoreOrDefault() {
+  if (readJson(AI_MODE_STORE) === true) $('ai-recommend').checked = true;
+
   const saved = readJson(CONTEXT_STORE);
   if (saved) {
     fillForm(normalizeContext(saved));
@@ -110,6 +146,11 @@ function restoreOrDefault() {
 $('trip-form').addEventListener('submit', (event) => {
   event.preventDefault();
   showMatches();
+});
+
+// Remember the AI-recommendation toggle across visits.
+$('ai-recommend').addEventListener('change', (event) => {
+  writeJson(AI_MODE_STORE, event.target.checked);
 });
 
 $('print-btn').addEventListener('click', () => window.print());

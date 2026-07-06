@@ -40,10 +40,16 @@
           <button type="button" id="ai-clear-key" class="secondary">Forget key</button>
         </div>
         <p id="ai-status" class="status" role="status" aria-live="polite"></p>
+        <label class="ai-toggle">
+          <input type="checkbox" id="ai-recommend" />
+          Let the AI reason over the catalog to rank my destinations
+          <span class="muted small">(grounded — it can only pick real, fact-checked places)</span>
+        </label>
         <p class="muted small">
           The key is sent only to Google's Gemini endpoint and kept in this tab's
           session storage — never in the code or on any server of ours. It also
-          unlocks ✨ story mode below. No key? Everything else works without it.
+          unlocks ✨ AI recommendations and story mode. No key? Everything works
+          without it, on the rule-based engine.
         </p>
       </div>
     </details>

@@ -100,6 +100,7 @@ h1, h2, h3, h4, h5, legend, button, .badge, .muted, label, select, input, textar
 .ai-fields { display: grid; gap: 0.5rem; margin-top: 0.75rem; }
 .ai-fields textarea, .ai-fields input { width: 100%; }
 .ai-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.ai-toggle { display: block; margin: 0.25rem 0; }
 .status { min-height: 1.2em; margin: 0.25rem 0 0; font-size: 0.9rem; }
 
 /* ── Form ──────────────────────────────────────────────────────── */
@@ -182,6 +183,8 @@ button:disabled { opacity: 0.6; cursor: wait; }
   margin: 0 0.3rem 0 0;
 }
 .top-badge { color: var(--accent); }
+.ai-badge { color: var(--festival); }
+.ai-reason { border-left: 3px solid var(--festival); padding-left: 0.6rem; }
 .season-peak { color: var(--gem); }
 .season-shoulder { color: var(--anchor); }
 .season-off { color: var(--error); }
