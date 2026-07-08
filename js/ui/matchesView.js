@@ -5,6 +5,9 @@
 
 import { el, reasonList, fill } from './dom.js';
 import { SHORTLIST_SIZE } from '../engine/matcher.js';
+import { INTERESTS } from '../engine/context.js';
+import { photoFor } from './photos.js';
+import { icon, iconChip } from './icons.js';
 
 const SEASON_BADGE = {
   peak: { label: 'Prime season', class: 'badge season-peak' },
@@ -12,21 +15,50 @@ const SEASON_BADGE = {
   off: { label: 'Off season', class: 'badge season-off' },
 };
 
+/**
+ * The photo zone atop a destination card: a real bundled photo when we have
+ * one (with the name overlaid), otherwise a vibrant gradient name block.
+ */
+function photoZone(destination, badges) {
+  const photo = photoFor(destination.id);
+  const overlay = el('div', { class: 'on-photo' }, [
+    el('h3', {}, destination.name),
+    el('p', { class: 'place-sub' }, `${destination.state} · ${destination.region} India`),
+  ]);
+  const inner = photo
+    ? [el('img', { src: photo.src, alt: photo.alt, loading: 'lazy' }), overlay]
+    : [el('div', { class: 'photo-fallback' }, destination.name), overlay];
+  return el('div', { class: 'card-photo' }, [...inner, ...badges]);
+}
+
+/** The two or three interests this destination serves most strongly. */
+function topInterestChips(destination) {
+  return Object.keys(INTERESTS)
+    .filter((key) => destination.interests[key] >= 0.7)
+    .sort((a, b) => destination.interests[b] - destination.interests[a])
+    .slice(0, 3)
+    .map((key) => iconChip(key, INTERESTS[key].split(' ')[0]));
+}
+
 function matchCard(entry, isTop, onChoose) {
   const { destination, season } = entry;
   const badge = SEASON_BADGE[season];
+  const cornerBadges = [
+    isTop ? el('span', { class: 'badge top-badge corner' }, 'Top match') : null,
+  ];
   return el('article', { class: `card match-card${isTop ? ' top-pick' : ''}` }, [
-    isTop ? el('p', { class: 'badge top-badge' }, 'Top match') : null,
-    el('h3', {}, destination.name),
-    el('p', { class: 'muted small' }, `${destination.state} · ${destination.region} India`),
-    el('p', { class: badge.class }, badge.label),
-    el('p', { class: 'tagline-small' }, destination.tagline),
-    reasonList(entry.reasons),
-    el(
-      'button',
-      { type: 'button', class: 'primary', onclick: () => onChoose(entry) },
-      `Build my ${destination.name} itinerary`
-    ),
+    photoZone(destination, cornerBadges.filter(Boolean)),
+    el('div', { class: 'card-body' }, [
+      el('p', { class: badge.class }, badge.label),
+      el('div', { class: 'icon-row' }, topInterestChips(destination)),
+      el('p', { class: 'tagline-small' }, destination.tagline),
+      reasonList(entry.reasons),
+      el(
+        'button',
+        { type: 'button', class: 'primary', onclick: () => onChoose(entry) },
+        ['Build my ', destination.name, ' itinerary']
+      ),
+    ]),
   ]);
 }
 
@@ -50,27 +82,28 @@ export function renderMatches(container, result, onChoose) {
 function aiMatchCard(rec, isTop, rankLookup, onChoose) {
   const { destination } = rec;
   const detRank = rankLookup.get(destination.id);
+  const badge = el('span', { class: 'badge ai-badge corner' }, isTop ? '✨ AI top pick' : '✨ AI');
   return el('article', { class: `card match-card${isTop ? ' top-pick' : ''}` }, [
-    el('p', { class: 'badge ai-badge' }, isTop ? '✨ AI top pick' : '✨ AI-reasoned'),
-    el('h3', {}, destination.name),
-    el('p', { class: 'muted small' }, `${destination.state} · ${destination.region} India`),
-    el('p', { class: 'tagline-small' }, destination.tagline),
-    el('p', { class: 'ai-reason' }, rec.fitReason),
-    rec.highlights.length > 0
-      ? el('p', { class: 'small' }, [
-          el('strong', {}, 'Don’t miss: '),
-          rec.highlights.map((a) => a.name).join(' · '),
-        ])
-      : null,
-    rec.watchOut ? el('p', { class: 'etiquette small' }, `Worth knowing: ${rec.watchOut}`) : null,
-    detRank
-      ? el('p', { class: 'muted small' }, `Rule-based engine cross-check: ranks this #${detRank} of ${rankLookup.size}`)
-      : null,
-    el(
-      'button',
-      { type: 'button', class: 'primary', onclick: () => onChoose({ destination }) },
-      `Build my ${destination.name} itinerary`
-    ),
+    photoZone(destination, [badge]),
+    el('div', { class: 'card-body' }, [
+      el('div', { class: 'icon-row' }, topInterestChips(destination)),
+      el('p', { class: 'ai-reason' }, rec.fitReason),
+      rec.highlights.length > 0
+        ? el('p', { class: 'small' }, [
+            el('strong', {}, 'Don’t miss: '),
+            rec.highlights.map((a) => a.name).join(' · '),
+          ])
+        : null,
+      rec.watchOut ? el('p', { class: 'etiquette small' }, `Worth knowing: ${rec.watchOut}`) : null,
+      detRank
+        ? el('p', { class: 'muted small' }, `Rule-based engine cross-check: ranks this #${detRank} of ${rankLookup.size}`)
+        : null,
+      el(
+        'button',
+        { type: 'button', class: 'primary', onclick: () => onChoose({ destination }) },
+        ['Build my ', destination.name, ' itinerary']
+      ),
+    ]),
   ]);
 }
 

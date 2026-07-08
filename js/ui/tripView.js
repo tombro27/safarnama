@@ -8,17 +8,31 @@ import { INTERESTS } from '../engine/context.js';
 import { monthName } from '../engine/events.js';
 import { attractionStorySubject, destinationStorySubject } from '../ai/storyteller.js';
 import { storyBlock } from './storyMode.js';
+import { photoFor } from './photos.js';
+import { icon, KIND_ICON } from './icons.js';
 
 function contextLine(ctx) {
   const interests = ctx.interests.map((k) => INTERESTS[k].toLowerCase()).join(', ');
   return `${ctx.days} ${ctx.pace} day(s) in ${monthName(ctx.month)} · ${ctx.party} · ${ctx.budget} budget · drawn to ${interests}`;
 }
 
-/** Destination intro: heritage summary + a city-level story-mode block. */
+/** A wide hero banner for the chosen destination, name overlaid on the photo. */
+function tripHero(destination) {
+  const photo = photoFor(destination.id);
+  const overlay = el('div', { class: 'on-photo' }, [
+    el('h3', {}, `${destination.name}, ${destination.state}`),
+  ]);
+  const inner = photo
+    ? [el('img', { src: photo.src, alt: photo.alt }), overlay]
+    : [el('div', { class: 'photo-fallback' }, destination.name), overlay];
+  return el('div', { class: 'card-photo trip-hero' }, inner);
+}
+
+/** Destination intro: hero photo, heritage summary + a city-level story block. */
 export function renderTripIntro(container, plan) {
   const { destination } = plan;
   fill(container, [
-    el('h3', {}, `${destination.name}, ${destination.state}`),
+    tripHero(destination),
     el('p', { class: 'muted small' }, contextLine(plan.context)),
     el('p', { class: 'heritage' }, destination.heritage),
     storyBlock(destinationStorySubject(destination)),
@@ -39,8 +53,9 @@ function itemMeta(attraction) {
 
 function dayItem(item, destination) {
   const { attraction } = item;
+  const kindIcon = icon(KIND_ICON[attraction.kind] ?? 'pin', { size: 18, className: 'title-icon' });
   return el('li', { class: 'day-item' }, [
-    el('div', { class: 'day-item-head' }, [el('strong', {}, attraction.name), ...itemBadges(item)]),
+    el('div', { class: 'day-item-head' }, [kindIcon, el('strong', {}, attraction.name), ...itemBadges(item)]),
     el('p', { class: 'muted small' }, itemMeta(attraction)),
     reasonList(item.why),
     el('p', { class: 'story' }, attraction.story),

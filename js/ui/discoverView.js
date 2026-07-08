@@ -8,6 +8,15 @@ import { el, reasonList, rupees, fill } from './dom.js';
 import { monthName } from '../engine/events.js';
 import { attractionStorySubject } from '../ai/storyteller.js';
 import { storyBlock } from './storyMode.js';
+import { icon, KIND_ICON } from './icons.js';
+
+/** A card heading with a leading kind icon. */
+function iconHeading(kind, text, marker) {
+  return el('h4', {}, [
+    icon(marker ?? KIND_ICON[kind] ?? 'pin', { size: 18, className: 'title-icon' }),
+    text,
+  ]);
+}
 
 /** 💎 Hidden gems, ranked for this traveler. */
 export function renderGems(container, gems, destination) {
@@ -19,7 +28,7 @@ export function renderGems(container, gems, destination) {
     container,
     gems.map((gem) =>
       el('article', { class: 'card gem-card' }, [
-        el('h4', {}, gem.attraction.name),
+        iconHeading(gem.attraction.kind, gem.attraction.name, 'gem'),
         el('p', { class: 'muted small' }, `${gem.attraction.kind} · ${gem.attraction.zone.replaceAll('-', ' ')}`),
         el('p', { class: 'story' }, gem.attraction.story),
         reasonList(gem.reasons),
@@ -63,7 +72,7 @@ function experienceCard(entry) {
   const { experience } = entry;
   return el('article', { class: `card experience-card${entry.splurge ? ' splurge' : ''}` }, [
     el('div', { class: 'day-item-head' }, [
-      el('h4', {}, experience.name),
+      iconHeading(experience.kind, experience.name),
       entry.splurge ? el('span', { class: 'badge splurge-badge' }, 'Splurge') : null,
     ]),
     el('p', { class: 'muted small' }, `${experience.kind} · about ${experience.hours}h · ${experience.cost === 0 ? 'free' : `${rupees(experience.cost)}/person`}`),

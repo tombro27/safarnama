@@ -192,11 +192,33 @@ js/ai/                     the GenAI layer (all optional at runtime)
   recommender.js           grounded RAG recommendation + the fact-fence
 js/ui/                     rendering, split by view (no engine logic)
   dom.js · storage.js      safe builders, guarded storage
-  aiBox.js · storyMode.js  the two GenAI surfaces
+  icons.js                 bespoke inline-SVG icon set (built via DOM)
+  photos.js                bundled destination-photo map + credits
+  aiBox.js · storyMode.js  the two interactive GenAI surfaces
   matchesView.js · tripView.js · discoverView.js
+assets/dest/               12 destination hero photos (WebP, same-origin)
 tests/                     unit tests + catalog sanity (node --test)
 server.mjs                 zero-dependency static server for npm start
+ATTRIBUTIONS.md            photo credits (Wikimedia Commons, CC licenses)
 ```
+
+## Look & feel
+
+A bold, vibrant visual system: a saturated festival-gradient hero, real
+destination photography, and a bespoke inline-SVG icon set. Deliberate
+choices that keep the security and size posture intact:
+
+- **Photos are bundled same-origin** (compressed WebP in `assets/dest/`,
+  ~1.7 MB for all 12), so the strict CSP (`img-src 'self'`) never has to be
+  loosened and the app still works fully offline. They are sourced from
+  **Wikimedia Commons** under CC BY / CC BY-SA / CC0, credited in
+  `ATTRIBUTIONS.md` and the footer, with descriptive `alt` text on every one.
+- **Icons are real SVG DOM nodes** (`createElementNS`), not `innerHTML` — the
+  no-innerHTML rule holds even for our own markup. They inherit `currentColor`
+  and are `aria-hidden` (decorative), so they add colour without noise for
+  screen readers.
+- Light/dark theming, reduced-motion support, and the print trip-sheet all
+  carry through the redesign.
 
 ## Assumptions
 
